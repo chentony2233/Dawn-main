@@ -36,7 +36,7 @@ func main() {
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
 
-	proxies := viper.GetStringSlice("proxies.data")
+	// proxies := viper.GetStringSlice("proxies.data")
 
 	var accounts []request.Authentication
 	err = viper.UnmarshalKey("data.auth", &accounts)
@@ -45,17 +45,17 @@ func main() {
 		return
 	}
 
-	for i, acc := range accounts {
-		go ping(proxies[i%len(proxies)], acc)
+	for _, acc := range accounts {
+		go ping(acc)
 	}
 
 	select {}
 
 }
 
-func ping(proxyURL string, authInfo request.Authentication) {
+func ping(authInfo request.Authentication) {
 	rand.Seed(time.Now().UnixNano())
-	client := resty.New().SetProxy(proxyURL).
+	client := resty.New().
 		SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
 		SetHeader("content-type", "application/json").
 		SetHeader("origin", "chrome-extension://fpdkjdnhkakefebpekbdhillbhonfjjp").
@@ -86,7 +86,7 @@ func ping(proxyURL string, authInfo request.Authentication) {
 	if err != nil {
 		logger.Error("Login error", zap.String("acc", authInfo.Email), zap.Error(err))
 		time.Sleep(1 * time.Minute)
-		go ping(proxyURL, authInfo)
+		go ping(authInfo)
 		return
 	}
 	lastLogin := time.Now()
@@ -107,7 +107,7 @@ func ping(proxyURL string, authInfo request.Authentication) {
 			if err != nil {
 				logger.Error("Login error", zap.String("acc", authInfo.Email), zap.Error(err))
 				time.Sleep(1 * time.Minute)
-				go ping(proxyURL, authInfo)
+				go ping(authInfo)
 				return
 			}
 		}
