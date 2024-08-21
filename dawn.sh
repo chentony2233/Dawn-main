@@ -97,8 +97,12 @@ function install_and_start_dawn() {
         exit 1
     fi
 
+    mv main dawn_runner
+
+    
+
     echo "执行项目..."
-    ./main
+    pm2 start dawn_runner
 
     # 等待用户按任意键返回主菜单
     read -n 1 -s -r -p "项目执行完成。按任意键返回主菜单..."
